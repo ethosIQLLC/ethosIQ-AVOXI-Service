@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.329
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ethosIQ-AVOXI-Service", "ethosIQ-AVOXI-Service\ethosIQ-AVOXI-Service.csproj", "{ACA0A95A-F29F-404E-8559-CFC6A0365C38}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6709C09A-7B4A-4764-B85C-98A4C763B7C6} = {6709C09A-7B4A-4764-B85C-98A4C763B7C6}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ethosIQ-AVOXI-Shared", "ethosIQ-AVOXI-Shared\ethosIQ-AVOXI-Shared.csproj", "{6709C09A-7B4A-4764-B85C-98A4C763B7C6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACA0A95A-F29F-404E-8559-CFC6A0365C38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACA0A95A-F29F-404E-8559-CFC6A0365C38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACA0A95A-F29F-404E-8559-CFC6A0365C38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACA0A95A-F29F-404E-8559-CFC6A0365C38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6709C09A-7B4A-4764-B85C-98A4C763B7C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6709C09A-7B4A-4764-B85C-98A4C763B7C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6709C09A-7B4A-4764-B85C-98A4C763B7C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6709C09A-7B4A-4764-B85C-98A4C763B7C6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F8E67CD4-99A7-4309-A45D-EA9CB9DA7E4B}
+	EndGlobalSection
+EndGlobal
