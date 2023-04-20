@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ethosIQ_Database;
 using System.Data;
-
+using System.Diagnostics;
 
 namespace ethosIQ_AVOXI_Shared.DAO
 {
@@ -43,47 +43,65 @@ namespace ethosIQ_AVOXI_Shared.DAO
                     TOCOUNTRYs[i] = cdr.ToCountry;
                     STATUSes[i] = cdr.Status;
                     DIRECTIONs[i] = cdr.Direction;
-                    DATESTARTs[i] = cdr.DateStart;
-                    DATEANSWEREDs[i] = cdr.DateAnswered;
-                    DATEENDs[i] = cdr.DateEnd;
+                    DATESTARTs[i] = cdr.DateStart.ToString("dd/MM/yyyy HH:mm:ss");
+                    DATEANSWEREDs[i] = cdr.DateAnswered.ToString("dd/MM/yyyy HH:mm:ss");
+                    DATEENDs[i] = cdr.DateEnd.ToString("dd/MM/yyyy HH:mm:ss");
                     DURATIONs[i] = cdr.DurSecs;
                     i++;
                 }
-
-                using (IDbConnection connection = Database.CreateOpenConnection())
+                try
                 {
-                    IDataParameter CALLID = Database.CreateParameter(":CALL_ID", "string", CALLIDs, ParameterDirection.Input);
-                    IDataParameter FROMDN = Database.CreateParameter(":FROM_DN", "string", FROMDNs, ParameterDirection.Input);
-                    IDataParameter TODN = Database.CreateParameter(":TO_DN", "string", TODNs, ParameterDirection.Input);
-                    IDataParameter FROMCOUNTRY = Database.CreateParameter(":FROM_COUNTRY", "string", FROMCOUNTRYs, ParameterDirection.Input);
-                    IDataParameter TOCOUNTRY = Database.CreateParameter(":TO_COUNTRY", "string", TOCOUNTRYs, ParameterDirection.Input);
-                    IDataParameter STATUS = Database.CreateParameter(":STATUS", "string", STATUSes, ParameterDirection.Input);
-                    IDataParameter DIRECTION = Database.CreateParameter(":DIRECTION", "string", DIRECTIONs, ParameterDirection.Input);
-                    IDataParameter DATESTART = Database.CreateParameter(":DATE_START", "string", DATESTARTs, ParameterDirection.Input);
-                    IDataParameter DATEANSWERED = Database.CreateParameter(":DATE_ANSWERED", "string", DATEANSWEREDs, ParameterDirection.Input);
-                    IDataParameter DATEEND = Database.CreateParameter(":DATE_END", "string", DATEENDs, ParameterDirection.Input);
-                    IDataParameter DURATION = Database.CreateParameter(":DUR_SECS", "int", DURATIONs, ParameterDirection.Input);
-
-
-                    using (IDbCommand command = Database.CreateCommand("INSERT INTO TBL_AVOXI_TFN (CALL_ID, FROM_DN, TO_DN, FROM_COUNTRY, TO_COUNTRY, STATUS, DIRECTION, DATE_START, DATE_ANSWERED, DATE_END, DUR_SECS) VALUES (:CALL_ID, :FROM_DN, :TO_DN, :FROM_COUNTRY, :TO_COUNTRY, :STATUS, :DIRECTION, :DATE_START, :DATE_ANSWERED, :DATE_END, :DUR_SECS)", connection, CDRList.Count))
+                    using (IDbConnection connection = Database.CreateOpenConnection())
                     {
-                        command.Parameters.Add(CALLID);
-                        command.Parameters.Add(FROMDN);
-                        command.Parameters.Add(TODN);
-                        command.Parameters.Add(FROMCOUNTRY);
-                        command.Parameters.Add(TOCOUNTRY);
-                        command.Parameters.Add(STATUS);
-                        command.Parameters.Add(DIRECTION);
-                        command.Parameters.Add(DATESTART);
-                        command.Parameters.Add(DATEANSWERED);
-                        command.Parameters.Add(DATEEND);
-                        command.Parameters.Add(DURATION);
-                      
+                        IDataParameter CALLID = Database.CreateParameter(":CALL_ID", "string", CALLIDs, ParameterDirection.Input);
+                        IDataParameter FROMDN = Database.CreateParameter(":FROM_DN", "string", FROMDNs, ParameterDirection.Input);
+                        IDataParameter TODN = Database.CreateParameter(":TO_DN", "string", TODNs, ParameterDirection.Input);
+                        IDataParameter FROMCOUNTRY = Database.CreateParameter(":FROM_COUNTRY", "string", FROMCOUNTRYs, ParameterDirection.Input);
+                        IDataParameter TOCOUNTRY = Database.CreateParameter(":TO_COUNTRY", "string", TOCOUNTRYs, ParameterDirection.Input);
+                        IDataParameter STATUS = Database.CreateParameter(":STATUS", "string", STATUSes, ParameterDirection.Input);
+                        IDataParameter DIRECTION = Database.CreateParameter(":DIRECTION", "string", DIRECTIONs, ParameterDirection.Input);
+                        IDataParameter DATESTART = Database.CreateParameter(":DATE_START", "string", DATESTARTs, ParameterDirection.Input);
+                        IDataParameter DATEANSWERED = Database.CreateParameter(":DATE_ANSWERED", "string", DATEANSWEREDs, ParameterDirection.Input);
+                        IDataParameter DATEEND = Database.CreateParameter(":DATE_END", "string", DATEENDs, ParameterDirection.Input);
+                        IDataParameter DURATION = Database.CreateParameter(":DUR_SECS", "int", DURATIONs, ParameterDirection.Input);
 
-                        Console.WriteLine(command.CommandText);
-                        command.ExecuteNonQuery();
+                        try
+                        {
+                            using (IDbCommand command = Database.CreateCommand("INSERT INTO TBL_AVOXI_TFN (CALL_ID, FROM_DN, TO_DN, FROM_COUNTRY, TO_COUNTRY, STATUS, DIRECTION, DATE_START, DATE_ANSWERED, DATE_END, DUR_SECS) VALUES (:CALL_ID, :FROM_DN, :TO_DN, :FROM_COUNTRY, :TO_COUNTRY, :STATUS, :DIRECTION, to_date(:DATE_START, 'dd/mm/yyyy hh24:mi:ss'), to_date(:DATE_ANSWERED, 'dd/mm/yyyy hh24:mi:ss'), to_date(:DATE_END, 'dd/mm/yyyy hh24:mi:ss'), :DUR_SECS)", connection, CDRList.Count))
+                            {
+                                command.Parameters.Add(CALLID);
+                                command.Parameters.Add(FROMDN);
+                                command.Parameters.Add(TODN);
+                                command.Parameters.Add(FROMCOUNTRY);
+                                command.Parameters.Add(TOCOUNTRY);
+                                command.Parameters.Add(STATUS);
+                                command.Parameters.Add(DIRECTION);
+                                command.Parameters.Add(DATESTART);
+                                command.Parameters.Add(DATEANSWERED);
+                                command.Parameters.Add(DATEEND);
+                                command.Parameters.Add(DURATION);
+
+
+                                Console.WriteLine(command.CommandText);
+                                command.ExecuteNonQuery();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            
+                            EventLog.WriteEntry("AVOXI Service", "Failed to insert data: " + e.Message + "\n" + e.StackTrace, EventLogEntryType.Error);
+
+                        }
+
+
                     }
                 }
+                catch(Exception e)
+                {
+                    EventLog.WriteEntry("AVOXI Service", "Failed to insert data: " + e.Message + "\n" + e.StackTrace, EventLogEntryType.Error);
+
+                }
+
             }
         }
 

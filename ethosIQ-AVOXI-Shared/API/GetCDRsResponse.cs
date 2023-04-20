@@ -46,13 +46,13 @@ namespace ethosIQ_AVOXI_Shared.API
         public string Direction { get; set; }
 
         [JsonProperty("date_start")]
-        public string DateStart { get; set; }
+        public DateTime DateStart { get; set; }
 
         [JsonProperty("date_answered")]
-        public string DateAnswered { get; set; }
+        public DateTime DateAnswered { get; set; }
 
         [JsonProperty("date_end")]
-        public string DateEnd { get; set; }
+        public DateTime DateEnd { get; set; }
 
         [JsonProperty("duration")]
         public Duration Duration { get; set; }

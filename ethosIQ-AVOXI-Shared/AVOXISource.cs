@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ethosIQ_AVOXI_Shared.API;
+using ethosIQ_AVOXI_Shared.DAO;
 using ethosIQ_Configuration;
-using ethosIQ_Extensions;
 using RestSharp;
 using RestSharp.Authenticators.OAuth2;
+using System;
+using System.Collections.Generic;
 using System.Configuration;
-using ethosIQ_AVOXI_Shared.API;
 using System.Timers;
-using ethosIQ_AVOXI_Shared.DAO;
 
 namespace ethosIQ_AVOXI_Shared
 {
@@ -49,10 +45,60 @@ namespace ethosIQ_AVOXI_Shared
                 Interval = Convert.ToInt32(ConfigurationManager.AppSettings["Interval"].ToString());
                 TimeZoneOffset = (ConfigurationManager.AppSettings["TimeZoneOffset"].ToString());
                 Delay = 5;
-               // TestReportFunction();
+             //   TestReportFunction();
             }
         }
+        public void Repost(long startDate, long endDate)
+        {
+            InitializeEventLog("AVOXI Service");
+            var options = new RestClientOptions("https://genius.avoxi.com/api/v2/cdrs")
+            {
+                Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(AccessToken, "Bearer")
+            };
+            Client = new RestClient(options);
+            GetCDRsResponse response = null;
+            bool GetCDRs = false;
+            while (!GetCDRs)
+            {
+                try
+                {
+                    int offset = 0;
 
+                    string format = "yyyy-MM-ddTHH:mm:ss";
+                    string startTime = DateTimeOffset.FromUnixTimeSeconds(startDate).DateTime.ToString(format);
+                    string endTime = DateTimeOffset.FromUnixTimeSeconds(endDate).DateTime.ToString(format);
+                    CDR cdr = new CDR(startTime, endTime);
+                    cdr.SetWebClient(Client);
+                    response = cdr.GetCDR(0);
+
+                    if (response != null)
+                    {
+                        ProcessCDR(response);
+                        LogInformation("Successfully reposted CDR data for " + response.Data.Count + " calls  for Interval " + startDate + " to " + endDate);
+                        Console.WriteLine("Successfully reposted CDR data for " + response.Data.Count + " calls  for Interval " + startDate + " to " + endDate);
+
+                    }
+                    while (response.Data.Count % 10000 == 0)
+                    {
+                        offset += 10000;
+                        response = cdr.GetCDR(offset);
+                        if (response != null)
+                        {
+                            ProcessCDR(response);
+                            LogInformation("Successfully pulled and processed CDR data for " + response.Data.Count + " calls  for Interval " + startTime + " to " + endTime);
+                            Console.WriteLine("Successfully pulled and processed CDR data for " + response.Data.Count + " calls  for Interval " + startTime + " to " + endTime);
+                        }
+                    }
+                    GetCDRs = true;
+                }
+                catch (Exception exception)
+                {
+                    LogError("Failed to repost CDR data: " + exception.Message + "\n" + exception.StackTrace);
+                    System.Threading.Thread.Sleep(5000);
+
+                }
+            }
+        }
         private void GetIntervalReport(object sender, ElapsedEventArgs args)
         {
             try
@@ -62,6 +108,7 @@ namespace ethosIQ_AVOXI_Shared
                 {
                     GetCDRsResponse response = null;
                     bool GetCDRs = false;
+                    int offset = 0;
                     while(!GetCDRs)
                     {
                         try
@@ -70,14 +117,25 @@ namespace ethosIQ_AVOXI_Shared
                             string endTime = GetIntervalEndTime(DateTime.UtcNow);
                             CDR cdr = new CDR(startTime, endTime);
                             cdr.SetWebClient(Client);
-                            response = cdr.GetCDR();
+                            response = cdr.GetCDR(offset);
 
                             if(response != null)
                             {
                                 ProcessCDR(response);
-                                LogInformation("Successfully pulled and processed CDR data for "+ response.Data.Count + "calls  for Interval " + startTime + " to "+ endTime);
-                                Console.WriteLine("Successfully pulled and processed CDR data for " + response.Data.Count + "calls  for Interval " + startTime + " to " + endTime);
+                                LogInformation("Successfully pulled and processed CDR data for "+ response.Data.Count + " calls  for Interval " + startTime + " to "+ endTime);
+                                Console.WriteLine("Successfully pulled and processed CDR data for " + response.Data.Count + " calls  for Interval " + startTime + " to " + endTime);
 
+                            }
+                            while(response.Data.Count%10000==0)
+                            {
+                                offset += 10000;
+                                response = cdr.GetCDR(offset);
+                                if (response != null)
+                                {
+                                    ProcessCDR(response);
+                                    LogInformation("Successfully pulled and processed CDR data for " + response.Data.Count + " calls  for Interval " + startTime + " to " + endTime);
+                                    Console.WriteLine("Successfully pulled and processed CDR data for " + response.Data.Count + " calls  for Interval " + startTime + " to " + endTime);
+                                }
                             }
                             GetCDRs = true;
                         }
@@ -110,7 +168,7 @@ namespace ethosIQ_AVOXI_Shared
                     string endTime = GetIntervalEndTime(DateTime.UtcNow);
                     CDR cdr = new CDR(startTime, endTime);
                     cdr.SetWebClient(Client);
-                    response = cdr.GetCDR();
+                    response = cdr.GetCDR(0);
 
                     if (response != null)
                     {

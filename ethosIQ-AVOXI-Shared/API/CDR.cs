@@ -24,7 +24,7 @@ namespace ethosIQ_AVOXI_Shared.API
             this.Client = Client;
         }
 
-        public GetCDRsResponse GetCDR()
+        public GetCDRsResponse GetCDR(int offset)
         {
             GetCDRsResponse cdrList = null;
             try
@@ -36,9 +36,12 @@ namespace ethosIQ_AVOXI_Shared.API
                     request.AddQueryParameter("call_start_oldest", intervalStart);
                     request.AddQueryParameter("call_start_newest", intervalEnd);
                     request.AddQueryParameter("limit", 10000);
+                    request.AddQueryParameter("offset", offset);
                     request.AddQueryParameter("timezone", "UTC");
                     RestResponse response = Client.Execute(request);
                     cdrList = ParseGetCDRs(response.Content);
+
+                    
 
                 }
             }

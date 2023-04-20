@@ -16,9 +16,9 @@ namespace ethosIQ_AVOXI_Shared.DAO
         public string ToCountry;
         public string Status;
         public string Direction;
-        public string DateStart;
-        public string DateAnswered;
-        public string DateEnd;
+        public DateTime DateStart;
+        public DateTime DateAnswered;
+        public DateTime DateEnd;
         public int DurSecs;
 
         public CallDetailRecord(CallData callData)
@@ -30,9 +30,9 @@ namespace ethosIQ_AVOXI_Shared.DAO
             ToCountry = callData.ToCountry;
             Status = callData.Status;
             Direction = callData.Direction;
-            DateStart = callData.DateStart;
-            DateAnswered = callData.DateAnswered;
-            DateEnd = callData.DateEnd;
+            DateStart = callData.DateStart.ToUniversalTime();
+            DateAnswered = callData.DateAnswered.ToUniversalTime();
+            DateEnd = callData.DateEnd.ToUniversalTime();
             DurSecs = Convert.ToInt32(callData.Duration.Seconds);
         }
     }
