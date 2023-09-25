@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
+
+
 using RestSharp;
 
 namespace ethosIQ_AVOXI_Shared.API
@@ -13,11 +12,16 @@ namespace ethosIQ_AVOXI_Shared.API
         private RestClient Client;
         private string intervalStart;
         private string intervalEnd;
+        private EventLog eventLog;
 
         public CDR(string intervalStart, string intervalEnd)
         {
             this.intervalEnd = intervalEnd;
             this.intervalStart = intervalStart;
+            eventLog = new EventLog
+            {
+                Source = "AVOXI Service"
+            };
         }
         public void SetWebClient(RestClient Client)
         {
@@ -39,9 +43,18 @@ namespace ethosIQ_AVOXI_Shared.API
                     request.AddQueryParameter("offset", offset);
                     request.AddQueryParameter("timezone", "UTC");
                     RestResponse response = Client.Execute(request);
-                    cdrList = ParseGetCDRs(response.Content);
+                    if(response.IsSuccessful)
+                    {
+                        cdrList = ParseGetCDRs(response.Content);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Status Code " + response.StatusCode + ": "+ response.StatusDescription);
+                        Console.WriteLine(response.Content);
+                        eventLog.WriteEntry("Status Code " + response.StatusCode + ": " + response.StatusDescription + ".\n" + response.Content, EventLogEntryType.Error);
+                    }
 
-                    
+
 
                 }
             }

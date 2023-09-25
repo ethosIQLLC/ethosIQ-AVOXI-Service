@@ -2,11 +2,13 @@
 using ethosIQ_AVOXI_Shared.DAO;
 using ethosIQ_Configuration;
 using RestSharp;
+using ethosIQ_Encrypt;
 using RestSharp.Authenticators.OAuth2;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Timers;
+using System.IO;
 
 namespace ethosIQ_AVOXI_Shared
 {
@@ -19,6 +21,8 @@ namespace ethosIQ_AVOXI_Shared
         private string TimeZoneOffset;
         private DateTime Now;
         private int Delay;
+        private string LogDirectory;
+        private bool TextLogging;
 
         public AVOXISource(string Name, string AccessToken)
         {
@@ -32,7 +36,7 @@ namespace ethosIQ_AVOXI_Shared
             InitializeEventLog("AVOXI Service");
             var options = new RestClientOptions("https://genius.avoxi.com/api/v2/cdrs")
             {
-                Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(AccessToken, "Bearer")
+                Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(Password.Decrypt(AccessToken), "Bearer")
             };
             Client = new RestClient(options);            
             if(Client != null)
@@ -44,6 +48,8 @@ namespace ethosIQ_AVOXI_Shared
 
                 Interval = Convert.ToInt32(ConfigurationManager.AppSettings["Interval"].ToString());
                 TimeZoneOffset = (ConfigurationManager.AppSettings["TimeZoneOffset"].ToString());
+                LogDirectory = ConfigurationManager.AppSettings["LogDirectory"].ToString();
+                TextLogging = Convert.ToBoolean(ConfigurationManager.AppSettings["TextLogging"].ToString());
                 Delay = 5;
              //   TestReportFunction();
             }
@@ -58,11 +64,12 @@ namespace ethosIQ_AVOXI_Shared
             Client = new RestClient(options);
             GetCDRsResponse response = null;
             bool GetCDRs = false;
+                                int offset = 0;
+
             while (!GetCDRs)
             {
                 try
                 {
-                    int offset = 0;
 
                     string format = "yyyy-MM-ddTHH:mm:ss";
                     string startTime = DateTimeOffset.FromUnixTimeSeconds(startDate).DateTime.ToString(format);
@@ -76,8 +83,9 @@ namespace ethosIQ_AVOXI_Shared
                         ProcessCDR(response);
                         LogInformation("Successfully reposted CDR data for " + response.Data.Count + " calls  for Interval " + startDate + " to " + endDate);
                         Console.WriteLine("Successfully reposted CDR data for " + response.Data.Count + " calls  for Interval " + startDate + " to " + endDate);
-
                     }
+                    
+
                     while (response.Data.Count % 10000 == 0)
                     {
                         offset += 10000;
@@ -94,6 +102,23 @@ namespace ethosIQ_AVOXI_Shared
                 catch (Exception exception)
                 {
                     LogError("Failed to repost CDR data: " + exception.Message + "\n" + exception.StackTrace);
+                    if(TextLogging)
+                    {
+                        using (StreamWriter writer = new StreamWriter(LogDirectory + @"\Repost Error" + DateTime.Now.ToString("ddMMyyyy hhmm") + ".txt", true))
+                        {
+                            writer.WriteLine("***********************************************");
+                            writer.WriteLine("Failed to repost CDR data: " + exception.Message + "\n" + exception.StackTrace);
+                            writer.WriteLine("offset = " + offset);
+                            foreach (CallData callData in response.Data)
+                            {
+                                writer.WriteLine("AVOXICallID: " + callData.AvoxiCallId);
+
+                            }
+                            writer.WriteLine("***********************************************");
+                            writer.Flush();
+                        }
+                    }
+                    
                     System.Threading.Thread.Sleep(5000);
 
                 }
@@ -142,6 +167,22 @@ namespace ethosIQ_AVOXI_Shared
                         catch(Exception exception)
                         {
                             LogError("Failed to pull and process CDR data: " + exception.Message + "\n" + exception.StackTrace);
+                            if (TextLogging)
+                            {
+                                using (StreamWriter writer = new StreamWriter(LogDirectory + @"\IntervalReport Error" + DateTime.Now.ToString("ddMMyyyy hhmm") + ".txt", true))
+                                {
+                                    writer.WriteLine("***********************************************");
+                                    writer.WriteLine("Failed to pull and process CDR data: " + exception.Message + "\n" + exception.StackTrace);
+                                    writer.WriteLine("offset = " + offset);
+                                    foreach (CallData callData in response.Data)
+                                    {
+                                        writer.WriteLine("AVOXICallID: " + callData.AvoxiCallId);
+
+                                    }
+                                    writer.WriteLine("***********************************************");
+                                    writer.Flush();
+                                }
+                            }
                             System.Threading.Thread.Sleep(5000);
 
                         }
@@ -151,6 +192,22 @@ namespace ethosIQ_AVOXI_Shared
             catch(Exception e)
             {
                 LogError("Failed to pull and process CDR data: " + e.Message + "\n" + e.StackTrace);
+                if (TextLogging)
+                {
+                    using (StreamWriter writer = new StreamWriter(LogDirectory + @"\IntervalReport Error" + DateTime.Now.ToString("ddMMyyyy hhmm") + ".txt", true))
+                    {
+                        writer.WriteLine("***********************************************");
+                        writer.WriteLine("Failed to pull and process CDR data: " + e.Message + "\n" + e.StackTrace);
+                        foreach (CallData callData in e.Data)
+                        {
+                            writer.WriteLine("AVOXICallID: " + callData.AvoxiCallId);
+
+                        }
+                        writer.WriteLine("***********************************************");
+                        writer.Flush();
+                    }
+                }
+
                 System.Threading.Thread.Sleep(10000);
             }
             HistoricalTimer.Start();

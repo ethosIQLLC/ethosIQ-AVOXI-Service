@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Configuration;
 using ethosIQ_AVOXI_Shared.Configuration;
 using ethosIQ_Database;
 using System.Threading.Tasks;
@@ -22,7 +21,6 @@ namespace ethosIQ_AVOXI_Shared
 
         public override void GetSources()
         {
-            Thread.Sleep(10000);
 
             try
             {              
